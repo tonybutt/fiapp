@@ -1,0 +1,13 @@
+[package]
+name = "fiapp"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7.9", features = ["macros"] }
+dotenv = "0.15.0"
+envload = "0.1.1"
+plaid = "8.0.0"
+serde = { version = "1.0.217", features = ["derive"] }
+tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
+tower-http = { version = "0.6.2", features = ["cors", "fs"] }
