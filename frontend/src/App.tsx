@@ -1,35 +1,55 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import { usePlaidLink } from "react-plaid-link";
+import "./App.css";
+import React from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [linkToken, setLinkToken] = useState(null);
+  const generateToken = async () => {
+    const response = await fetch("/api/create_link_token", {
+      method: "POST",
+    });
+    const data = await response.json();
+    console.log("Data", data);
+    setLinkToken(data.link_token);
+  };
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  useEffect(() => {
+    generateToken();
+  }, []);
+
+  return linkToken != null ? <Link linkToken={linkToken} /> : <></>;
+};
+
+interface LinkProps {
+  linkToken: string | null;
 }
 
-export default App
+const Link: React.FC<LinkProps> = (props: LinkProps) => {
+  const callback = async (public_token: any, metadata: any) => {
+    const response = await fetch("/api/set_access_token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ public_token }),
+    });
+    const data = await response.json();
+    console.log(data);
+  };
+  const onSuccess = React.useCallback(callback, []);
+
+  const config: Parameters<typeof usePlaidLink>[0] = {
+    token: props.linkToken!,
+    onSuccess,
+  };
+
+  const { open, ready } = usePlaidLink(config);
+
+  return (
+    <button onClick={() => open()} disabled={!ready}>
+      Link Account
+    </button>
+  );
+};
+export default App;
